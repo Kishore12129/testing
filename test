@@ -1,0 +1,54 @@
+import subprocess
+import sys
+
+def run_command(command):
+    """Runs a command in the shell and prints the output."""
+    try:
+        result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True)
+        print(result.stdout)
+        return result.returncode
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred: {e.stderr}")
+        return e.returncode
+
+def test_git_branch(repo_url, branch_name):
+    """Clones the repo, checks out the branch, and runs tests."""
+    
+    # 1. Clone the repository if not already cloned
+    clone_command = f"git clone {repo_url}"
+    print("Cloning repository...")
+    return_code = run_command(clone_command)
+    
+    if return_code != 0:
+        print("Error cloning repository.")
+        sys.exit(1)
+
+    repo_name = repo_url.split("/")[-1].replace(".git", "")
+    
+    # 2. Navigate to the repository directory
+    subprocess.run(f"cd {repo_name}", shell=True)
+    
+    # 3. Checkout the desired branch
+    checkout_command = f"git checkout {branch_name}"
+    print(f"Switching to branch: {branch_name}...")
+    return_code = run_command(checkout_command)
+    
+    if return_code != 0:
+        print(f"Error checking out branch {branch_name}.")
+        sys.exit(1)
+
+    # 4. Run your tests
+    test_command = "pytest"  # Or another testing command, e.g., 'npm test'
+    print("Running tests...")
+    return_code = run_command(test_command)
+    
+    if return_code != 0:
+        print("Tests failed.")
+        sys.exit(1)
+    
+    print("Tests passed successfully!")
+
+if __name__ == "__main__":
+    repo_url = "https://github.com/yourusername/your-repository.git"
+    branch_name = "your-branch-name"
+    test_git_branch(repo_url, branch_name)
